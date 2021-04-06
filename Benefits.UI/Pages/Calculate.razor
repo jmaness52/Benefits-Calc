@@ -1,0 +1,91 @@
+﻿@page "/"
+@inject HttpClient httpClient
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+@inject AppState appState
+
+<h1>Benefits Calculator</h1>
+<br />
+<p>Enter the Employee Name. Enter the number of dependents and their Names.</p>
+<p>Press Calculate to see the yearly and per period costs for Employee and Dependent(s)</p>
+<hr />
+<br />
+<EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
+    <p>
+        <label>
+            Employee Name
+            <InputText id="employeeName" class="form-control" @bind-Value="requestModel[0].Name" />
+        </label>
+    </p>
+    <p>
+        <label> Number of Dependents</label>
+    </p>
+    <p>
+        <select id="selectDependents" class="dropdown-menu-md-left" @onchange="OnDependentsChanged">
+            @for (int i = 0; i <= AppConstants.MaxDependents; i++)
+            {
+                <option>@i</option>
+            }
+        </select>
+    </p>
+    @for (int i = 1; i <= numDependents; i++)
+    {
+        int j = i; // prevents index out of range exception
+        string currDependentId = "dependent" + j.ToString();
+        <p>
+            <label for="@currDependentId">
+                Dependent @j Name
+            </label>
+            <InputText id="@currDependentId" class="form-text" @bind-Value="requestModel[j].Name" />
+
+        </p>
+
+    }
+    <button type="submit">Calculate</button>
+</EditForm>
+
+@code {
+
+    private List<BeneficiaryRequestModel> requestModel;
+    private int numDependents = 0;
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        requestModel = new List<BeneficiaryRequestModel>();
+        requestModel.Add(new BeneficiaryRequestModel { Name = "", Type = AppConstants.Employee });
+        for (int i = 0; i < AppConstants.MaxDependents; i++)
+        {
+            requestModel.Add(new BeneficiaryRequestModel { Name = "", Type = AppConstants.Dependent });
+        }
+
+    }
+
+    private void OnDependentsChanged(ChangeEventArgs e)
+    {
+        numDependents = int.Parse(e.Value.ToString());
+        //Clear any extraneous dependents when selection changes
+        for (int i = numDependents; i <= AppConstants.MaxDependents; i++)
+        {
+            requestModel[i].Name = string.Empty;
+        }
+        StateHasChanged();
+    }
+
+
+    private async Task HandleValidSubmit()
+    {
+        requestModel = requestModel.Where(b =>
+        {
+            return !string.IsNullOrWhiteSpace(b.Name);
+        }).ToList();
+
+        HttpResponseMessage responseMessage = await httpClient.PostAsJsonAsync(AppConstants.PostURL, requestModel);
+        string responseStr = await responseMessage.Content.ReadAsStringAsync();
+
+        appState.Result = JsonSerializer.Deserialize<List<BeneficiaryResponseModel>>(responseStr);
+        appState.Result.Sort();
+        navigationManager.NavigateTo($"/results");
+    }
+
+}

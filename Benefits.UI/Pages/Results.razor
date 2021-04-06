@@ -1,0 +1,46 @@
+﻿@page "/results"
+@inject AppState appState
+@using System.Collections.Generic
+
+<h3>Results</h3>
+<p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Yearly Costs</th>
+                <th scope="col">Per Period Costs</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in appState.Result)
+            {
+                yearSum += item.yearCost;
+                periodSum += item.periodCost;
+
+                <tr>
+                    <th scope="row">@item.name</th>
+                    <td>@item.type</td>
+                    <td>@item.yearCost</td>
+                    <td>@item.periodCost</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th style="text-align:right" colspan="2">Totals:</th>
+                <td>@yearSum</td>
+                <td>@periodSum</td>
+            </tr>
+        </tfoot>
+    </table>
+</p>
+
+<a href="/">Calculate again</a>
+
+@code {
+
+    private decimal yearSum;
+    private decimal periodSum;
+}

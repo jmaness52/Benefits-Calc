@@ -10,8 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Benefits.BusinessLogic;
 
-namespace BenefitsAPI
+namespace Benefits.API
 {
     public class Startup
     {
@@ -25,7 +26,17 @@ namespace BenefitsAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
+
+            services.AddScoped<IBenefitCalculator, BenefitCalculator>();
+            //services.AddCors(opt => opt.AddPolicy("BlazorPolicy", builder =>
+            //{
+            //    builder.AllowAnyOrigin()
+            //           .AllowAnyMethod()
+            //           .AllowAnyHeader()
+            //           .AllowCredentials();
+            //}));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,7 +48,13 @@ namespace BenefitsAPI
             }
 
             app.UseHttpsRedirection();
-
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+            app.UseCors(policy => {
+                policy.AllowAnyOrigin();
+                policy.AllowAnyMethod();
+                policy.AllowAnyHeader();
+            });
             app.UseRouting();
 
             app.UseAuthorization();
